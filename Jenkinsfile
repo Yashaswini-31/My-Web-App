@@ -1,46 +1,59 @@
-pipeline { 
+pipeline {
     agent any
 
-    tools {
-        maven 'Maven 3'  // The name of the Maven tool configured in Jenkins
+    environment {
+        DOCKER_IMAGE = 'my-web-app-image'  // Name of the Docker image
+        DOCKER_CONTAINER = 'my-web-app-container' // Name of the container
+        MAVEN_HOME = '/usr/share/maven' // Maven installation in the Docker container
+        PATH = "${MAVEN_HOME}/bin:${env.PATH}" // Maven path
     }
 
     stages {
-        stage('Checkout') {
+        stage('Checkout Code') {
             steps {
-                // Checkout the code from the GitHub repository using HTTPS with credentials
-                git url: 'https://github.com/Yashaswini-31/My-Web-App.git', credentialsId: '316b470b-4a11-403d-83fd-117ebd46191b'
+                // Checkout the code from the GitHub repository
+                git 'https://github.com/Yashaswini-31/My-Web-App.git'
             }
         }
 
-        stage('Build') {
+        stage('Build Docker Image') {
             steps {
-                // Build the project using Maven
-                sh 'mvn clean install'
+                script {
+                    // Build Docker image with the Java application and Maven
+                    docker.build(DOCKER_IMAGE)
+                }
             }
         }
 
-        stage('Test') {
+        stage('Build and Test with Maven') {
             steps {
-                // Run tests (if any) using Maven
-                sh 'mvn test'
+                script {
+                    // Run Maven build and test commands inside the Docker container
+                    docker.image(DOCKER_IMAGE).inside {
+                        sh 'mvn clean install'
+                    }
+                }
             }
         }
 
         stage('Deploy') {
             steps {
-                // Deploy the application (this step is optional)
-                echo 'Deploying the application...'
+                script {
+                    // Run the Docker container with the built Java web application
+                    docker.image(DOCKER_IMAGE).inside {
+                        sh 'java -jar target/my-web-app.jar'
+                    }
+                }
             }
         }
     }
 
     post {
         success {
-            echo 'Build and test successful!'
+            echo 'Pipeline successfully completed!'
         }
         failure {
-            echo 'Build failed!'
+            echo 'There was a failure in the pipeline.'
         }
     }
 }
