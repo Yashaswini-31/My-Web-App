@@ -9,7 +9,7 @@ pipeline {
         stage('Checkout') {
             steps {
                 // Checkout the code from the GitHub repository using HTTPS with credentials
-                git url: 'https://github.com/Yashaswini-31/Practicals.git', credentialsId: '316b470b-4a11-403d-83fd-117ebd46191b'
+                git url: 'https://github.com/Yashaswini-31/My-Web-App.git', credentialsId: '316b470b-4a11-403d-83fd-117ebd46191b'
             }
         }
 
